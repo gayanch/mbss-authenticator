@@ -215,9 +215,9 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
     private boolean isAccountSuspended(HttpServletRequest request, HttpServletResponse response,
                                        AuthenticationContext context) {
 
-        boolean isFeatureEnabled = ConfigLoader.getInstance().getMbssAuthenticatorConfig().getFeatureConfig()
+        boolean featureEnabled = ConfigLoader.getInstance().getMbssAuthenticatorConfig().getFeatureConfig()
                 .isAccountSuspensionEnabled();
-        if (!isFeatureEnabled) {
+        if (!featureEnabled) {
             return false;
         }
 
@@ -258,11 +258,14 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
     private boolean isNewSessionAllowed(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationContext context) {
 
-        boolean isFeatureEnabled = ConfigLoader.getInstance().getMbssAuthenticatorConfig().getFeatureConfig()
+        boolean featureEnabled = ConfigLoader.getInstance().getMbssAuthenticatorConfig().getFeatureConfig()
                 .isSessionLimitingEnabled();
-        if (!isFeatureEnabled) {
+        if (!featureEnabled) {
             return true;
         }
+
+        final int maximumSessionCount = ConfigLoader.getInstance().getMbssAuthenticatorConfig().getFeatureConfig()
+                .getMaximumSessionLimit();
 
         String username = request.getParameter(MBSSAuthenticatorConstants.USER_NAME);
         String serviceProviderName = context.getServiceProviderName();
@@ -270,7 +273,7 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
         try {
             int cachedActiveSessions = SessionAuthenticatorDbUtil.getActiveSessionCount(username + ":"
                     + serviceProviderName);
-            if (cachedActiveSessions < 1) {
+            if (cachedActiveSessions < maximumSessionCount) {
                 allowed = true;
             } else {
                 log.warn("Authentication blocked for user: " + username + ", Reason: Active session limit exceeded.");
@@ -287,9 +290,9 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
     private boolean isLoginTimeRestricted(HttpServletRequest request, HttpServletResponse response,
                                           AuthenticationContext context) {
 
-        boolean isFeatureEnabled = ConfigLoader.getInstance().getMbssAuthenticatorConfig().getFeatureConfig()
+        boolean featureEnabled = ConfigLoader.getInstance().getMbssAuthenticatorConfig().getFeatureConfig()
                 .isLoginTimeRestrictionEnabled();
-        if (!isFeatureEnabled) {
+        if (!featureEnabled) {
             return false;
         }
 
@@ -373,5 +376,52 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
             log.error("Error occurred while checking authorized login times.", e);
             return true;
         }
+    }
+
+    private boolean isPasswordExpired(HttpServletRequest request, HttpServletResponse response,
+                                      AuthenticationContext context) {
+        boolean featureEnabled = ConfigLoader.getInstance().getMbssAuthenticatorConfig().getFeatureConfig()
+                .isPeriodicPasswordChangeEnabled();
+        if (!featureEnabled) {
+            return false;
+        }
+
+        int expireInterval = ConfigLoader.getInstance().getMbssAuthenticatorConfig().getPasswordChangeConfig()
+                .getPasswordChangeInterval();
+        String username = request.getParameter(MBSSAuthenticatorConstants.USER_NAME);
+        boolean expired = false;
+        long currentTime = System.currentTimeMillis();
+        long lastPasswordChangeTime = -1l;
+
+        try {
+            int tenantId = MBSSAuthenticatorServiceComponent.getRealmService().getTenantManager().
+                    getTenantId(MultitenantUtils.getTenantDomain(username));
+            UserStoreManager userStoreManager = (UserStoreManager) MBSSAuthenticatorServiceComponent
+                    .getRealmService().getTenantUserRealm(tenantId).getUserStoreManager();
+
+            String lastPasswordChangeClaimValue = userStoreManager.getUserClaimValue(username,
+                    MBSSAuthenticatorConstants.LAST_PASSWORD_CHANGE_CLAIM, null);
+
+            if (null != lastPasswordChangeClaimValue && (!lastPasswordChangeClaimValue.isEmpty())) {
+                lastPasswordChangeTime = Long.parseLong(lastPasswordChangeClaimValue);
+            }
+        } catch (UserStoreException e) {
+            log.warn(e.getMessage(), e);
+
+            context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON,
+                    MBSSAuthenticatorConstants.FAILED_REASON_UNKNOWN);
+            context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON_CAUSE, e.getMessage());
+        }
+
+        if (lastPasswordChangeTime != -1) {
+            long unchangedDurationInMillis = currentTime - lastPasswordChangeTime;
+            long expireIntervalInMillis = expireInterval * 24 * 60 * 60 * 1000;
+
+            if (unchangedDurationInMillis > expireIntervalInMillis) {
+                expired = true;
+            }
+        }
+
+        return expired;
     }
 }

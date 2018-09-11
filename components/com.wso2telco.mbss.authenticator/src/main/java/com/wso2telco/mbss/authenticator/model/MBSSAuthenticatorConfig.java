@@ -10,6 +10,7 @@ public class MBSSAuthenticatorConfig {
     private List<MBSSAuthenticatorConfig.WorkingTime> workingTimeRoleConfig;
     private MBSSAuthenticatorConfig.ErrorMessagesConfig errorMessagesConfig;
     private FeatureConfig featureConfig;
+    private PeriodicPasswordChangeConfig passwordChangeConfig;
 
     @XmlElementWrapper(name = "workingTimes")
     @XmlElement(name = "workingTime")
@@ -39,10 +40,44 @@ public class MBSSAuthenticatorConfig {
         this.featureConfig = featureConfig;
     }
 
+    @XmlElement(name = "periodicPasswordChangeConfig")
+    public PeriodicPasswordChangeConfig getPasswordChangeConfig() {
+        return passwordChangeConfig;
+    }
+
+    public void setPasswordChangeConfig(PeriodicPasswordChangeConfig passwordChangeConfig) {
+        this.passwordChangeConfig = passwordChangeConfig;
+    }
+
+    public static class PeriodicPasswordChangeConfig {
+        int passwordChangeInterval;
+        int passwordHistoryValidationCount;
+
+        @XmlElement(name = "passwordChangeInterval")
+        public int getPasswordChangeInterval() {
+            return passwordChangeInterval;
+        }
+
+        public void setPasswordChangeInterval(int passwordChangeInterval) {
+            this.passwordChangeInterval = passwordChangeInterval;
+        }
+
+        @XmlElement(name = "passwordHistoryValidationCount")
+        public int getPasswordHistoryValidationCount() {
+            return passwordHistoryValidationCount;
+        }
+
+        public void setPasswordHistoryValidationCount(int passwordHistoryValidationCount) {
+            this.passwordHistoryValidationCount = passwordHistoryValidationCount;
+        }
+    }
+
     public static class FeatureConfig {
         private boolean accountSuspensionEnabled;
         private boolean sessionLimitingEnabled;
         private boolean loginTimeRestrictionEnabled;
+        private boolean periodicPasswordChangeEnabled;
+        private int maximumSessionLimit;
 
         @XmlElement(name = "accountSuspensionFeature")
         public boolean isAccountSuspensionEnabled() {
@@ -67,8 +102,26 @@ public class MBSSAuthenticatorConfig {
             return loginTimeRestrictionEnabled;
         }
 
+        @XmlElement(name = "periodicPasswordChangeFeature")
+        public boolean isPeriodicPasswordChangeEnabled() {
+            return periodicPasswordChangeEnabled;
+        }
+
+        public void setPeriodicPasswordChangeEnabled(boolean periodicPasswordChangeEnabled) {
+            this.periodicPasswordChangeEnabled = periodicPasswordChangeEnabled;
+        }
+
         public void setLoginTimeRestrictionEnabled(boolean loginTimeRestrictionEnabled) {
             this.loginTimeRestrictionEnabled = loginTimeRestrictionEnabled;
+        }
+
+        @XmlElement(name = "maximumSessionLimit")
+        public int getMaximumSessionLimit() {
+            return maximumSessionLimit;
+        }
+
+        public void setMaximumSessionLimit(int maximumSessionLimit) {
+            this.maximumSessionLimit = maximumSessionLimit;
         }
     }
 
