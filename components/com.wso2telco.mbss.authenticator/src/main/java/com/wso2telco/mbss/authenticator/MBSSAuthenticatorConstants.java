@@ -20,6 +20,7 @@ public abstract class MBSSAuthenticatorConstants {
     public static final String FAILED_REASON_INVALID_CREDENTIALS = "invalidCredentials";
     public static final String FAILED_REASON_UNKNOWN = "unknownReason";
     public static final String FAILED_REASON_OUTSIDE_WORKING_HOURS = "outsideWorkingHours";
+    public static final String FAILED_REASON_PASSWORD_EXPIRED = "passwordExpired";
 
     public static final String MBSS_AUTHENTICATOR_CONFIG_FILE_NAME = "mbss-authenticator-config.xml";
 }

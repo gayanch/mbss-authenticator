@@ -107,6 +107,14 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
                             + "&authenticators=BasicAuthenticator:LOCAL" + retryParam);
                     return;
 
+                } else if (MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_EXPIRED.equals(failedReason)) {
+                    String retryParam = "&authFailure=true&authFailureMsg=" +
+                            "Password is expired. please change into new one.".replaceAll(" ", "%20");
+
+                    response.sendRedirect(response.encodeRedirectURL(new StringBuilder().append(loginPage)
+                            .append("?").append(queryParams).toString())
+                            + "&authenticators=BasicAuthenticator:LOCAL" + retryParam);
+                    return;
                 }
             }
 
@@ -133,6 +141,11 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
         boolean accountSuspended = isAccountSuspended(request, response, context);
         if (accountSuspended) {
             throw new AuthenticationFailedException("User account is suspended");
+        }
+
+        boolean passwordExpired = isPasswordExpired(request, response, context);
+        if (passwordExpired) {
+            throw new AuthenticationFailedException("User password has been expired");
         }
 
         boolean newSessionAllowed = isNewSessionAllowed(request, response, context);
@@ -420,6 +433,13 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
             if (unchangedDurationInMillis > expireIntervalInMillis) {
                 expired = true;
             }
+        }
+
+        if (expired) {
+            log.warn("Password of user [" + username + "] has been expired. " +
+                    "Request will redirect to password change page.");
+            context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON,
+                    MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_EXPIRED);
         }
 
         return expired;
