@@ -52,6 +52,7 @@ public class MBSSAuthenticatorConfig {
     public static class PeriodicPasswordChangeConfig {
         int passwordChangeInterval;
         int passwordHistoryValidationCount;
+        boolean changePasswordAtFirstLogin;
 
         @XmlElement(name = "passwordChangeInterval")
         public int getPasswordChangeInterval() {
@@ -69,6 +70,15 @@ public class MBSSAuthenticatorConfig {
 
         public void setPasswordHistoryValidationCount(int passwordHistoryValidationCount) {
             this.passwordHistoryValidationCount = passwordHistoryValidationCount;
+        }
+
+        @XmlElement(name = "changePasswordAtFirstLogin")
+        public boolean isChangePasswordAtFirstLogin() {
+            return changePasswordAtFirstLogin;
+        }
+
+        public void setChangePasswordAtFirstLogin(boolean changePasswordAtFirstLogin) {
+            this.changePasswordAtFirstLogin = changePasswordAtFirstLogin;
         }
     }
 
@@ -132,6 +142,12 @@ public class MBSSAuthenticatorConfig {
         private String accountLockedMessage;
         private String loginTimeRestrictedMessage;
         private String unknownErrorMessage;
+        private String passwordChangeSuccessMessage;
+        private String passwordChangeFailedMessage;
+        private String passwordExpiredMessage;
+        private String passwordsDoNotMatchMessage;
+        private String passwordRejectedByRegExPolicyMessage;
+        private String currentPasswordInvalidMessage;
 
         @XmlElement(name = "accountSuspendedMessage")
         public String getAccountSuspendedMessage() {
@@ -185,6 +201,60 @@ public class MBSSAuthenticatorConfig {
 
         public void setUnknownErrorMessage(String unknownErrorMessage) {
             this.unknownErrorMessage = unknownErrorMessage;
+        }
+
+        @XmlElement(name = "passwordChangeSuccessMessage")
+        public String getPasswordChangeSuccessMessage() {
+            return passwordChangeSuccessMessage;
+        }
+
+        public void setPasswordChangeSuccessMessage(String passwordChangeSuccessMessage) {
+            this.passwordChangeSuccessMessage = passwordChangeSuccessMessage;
+        }
+
+        @XmlElement(name = "passwordChangeFailedMessage")
+        public String getPasswordChangeFailedMessage() {
+            return passwordChangeFailedMessage;
+        }
+
+        public void setPasswordChangeFailedMessage(String passwordChangeFailedMessage) {
+            this.passwordChangeFailedMessage = passwordChangeFailedMessage;
+        }
+
+        @XmlElement(name = "passwordExpiredMessage")
+        public String getPasswordExpiredMessage() {
+            return passwordExpiredMessage;
+        }
+
+        public void setPasswordExpiredMessage(String passwordExpiredMessage) {
+            this.passwordExpiredMessage = passwordExpiredMessage;
+        }
+
+        @XmlElement(name = "passwordsDoNotMatchMessage")
+        public String getPasswordsDoNotMatchMessage() {
+            return passwordsDoNotMatchMessage;
+        }
+
+        public void setPasswordsDoNotMatchMessage(String passwordsDoNotMatchMessage) {
+            this.passwordsDoNotMatchMessage = passwordsDoNotMatchMessage;
+        }
+
+        @XmlElement(name = "passwordRejectedByRegExPolicyMessage")
+        public String getPasswordRejectedByRegExPolicyMessage() {
+            return passwordRejectedByRegExPolicyMessage;
+        }
+
+        public void setPasswordRejectedByRegExPolicyMessage(String passwordRejectedByRegExPolicyMessage) {
+            this.passwordRejectedByRegExPolicyMessage = passwordRejectedByRegExPolicyMessage;
+        }
+
+        @XmlElement(name = "currentPasswordInvalidMessage")
+        public String getCurrentPasswordInvalidMessage() {
+            return currentPasswordInvalidMessage;
+        }
+
+        public void setCurrentPasswordInvalidMessage(String currentPasswordInvalidMessage) {
+            this.currentPasswordInvalidMessage = currentPasswordInvalidMessage;
         }
     }
 

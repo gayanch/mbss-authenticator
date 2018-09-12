@@ -4,6 +4,7 @@ import com.wso2telco.mbss.authenticator.internal.MBSSAuthenticatorServiceCompone
 import com.wso2telco.mbss.authenticator.model.AuthorizeRoleResponse;
 import com.wso2telco.mbss.authenticator.model.MBSSAuthenticatorConfig;
 import com.wso2telco.mbss.authenticator.util.ConfigLoader;
+import com.wso2telco.mbss.authenticator.util.MBSSAuthenticatorUtils;
 import com.wso2telco.mbss.authenticator.util.SessionAuthenticatorDbUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -17,6 +18,7 @@ import org.wso2.carbon.identity.application.authentication.framework.util.Framew
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.UserStoreManager;
 import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
+import org.wso2.carbon.user.core.util.UserCoreUtil;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +30,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Username Password based custom Authenticator
@@ -107,14 +110,71 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
                             + "&authenticators=BasicAuthenticator:LOCAL" + retryParam);
                     return;
 
-                } else if (MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_EXPIRED.equals(failedReason)) {
+                } else if (MBSSAuthenticatorConstants.REASON_PASSWORD_CHANGE_SUCCESS.equals(failedReason)) {
                     String retryParam = "&authFailure=true&authFailureMsg=" +
-                            "Password is expired. please change into new one.".replaceAll(" ", "%20");
+                           errorMessagesConfig.getPasswordChangeSuccessMessage().replaceAll(" ", "%20");
 
                     response.sendRedirect(response.encodeRedirectURL(new StringBuilder().append(loginPage)
                             .append("?").append(queryParams).toString())
                             + "&authenticators=BasicAuthenticator:LOCAL" + retryParam);
                     return;
+
+                } else {
+                    loginPage = loginPage.replace("login.do", "pwd-reset.jsp");
+                    String username = context.getSubject().getUserName();
+                    String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
+                    String tenantDomain = context.getTenantDomain();
+                    String fullyQualifiedUsername = UserCoreUtil.addTenantDomainToEntry(tenantAwareUsername, tenantDomain);
+
+                    if (MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_EXPIRED.equals(failedReason)) {
+                        loginPage = loginPage.replace("login.do", "pwd-reset.jsp");
+                        String retryParam = "&authFailure=true&authFailureMsg=" + errorMessagesConfig
+                                .getPasswordExpiredMessage().replaceAll(" ", "%20");
+
+                        String encodedUrl = loginPage + "?" + queryParams + "&username=" + fullyQualifiedUsername
+                                + "&authenticators=" + getName() + ":" + "LOCAL" + retryParam;
+                        response.sendRedirect(encodedUrl);
+                        return;
+
+                    } else if (MBSSAuthenticatorConstants.FAILED_REASON_PASSWORDS_DO_NOT_MATCH.equals(failedReason)) {
+                        loginPage = loginPage.replace("login.do", "pwd-reset.jsp");
+                        String retryParam = "&authFailure=true&authFailureMsg=" + errorMessagesConfig
+                                .getPasswordsDoNotMatchMessage().replaceAll(" ", "%20");
+
+                        String encodedUrl = loginPage + "?" + queryParams + "&username=" + fullyQualifiedUsername
+                                + "&authenticators=" + getName() + ":" + "LOCAL" + retryParam;
+                        response.sendRedirect(encodedUrl);
+                        return;
+
+                    } else if (MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_CHANGE_FAILED.equals(failedReason)) {
+                        String retryParam = "&authFailure=true&authFailureMsg=" + errorMessagesConfig
+                                .getPasswordChangeFailedMessage().replaceAll(" ", "%20");
+
+                        String encodedUrl = loginPage + "?" + queryParams + "&username=" + fullyQualifiedUsername
+                                + "&authenticators=" + getName() + ":" + "LOCAL" + retryParam;
+                        response.sendRedirect(encodedUrl);
+                        return;
+
+                    } else if (MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_REJECTED.equals(failedReason)) {
+                        loginPage = loginPage.replace("login.do", "pwd-reset.jsp");
+                        String retryParam = "&authFailure=true&authFailureMsg=" + errorMessagesConfig
+                                .getPasswordRejectedByRegExPolicyMessage().replaceAll(" ", "%20");
+
+                        String encodedUrl = loginPage + "?" + queryParams + "&username=" + fullyQualifiedUsername
+                                + "&authenticators=" + getName() + ":" + "LOCAL" + retryParam;
+                        response.sendRedirect(encodedUrl);
+                        return;
+
+                    } else if (MBSSAuthenticatorConstants.FAILED_REASON_INVALID_CURRENT_PASSWORD.equals(failedReason)) {
+                        String retryParam = "&authFailure=true&authFailureMsg=" + errorMessagesConfig
+                                .getCurrentPasswordInvalidMessage().replaceAll(" ", "%20");
+
+                        String encodedUrl = loginPage + "?" + queryParams + "&username=" + fullyQualifiedUsername
+                                + "&authenticators=" + getName() + ":" + "LOCAL" + retryParam;
+                        response.sendRedirect(encodedUrl);
+                        return;
+
+                    }
                 }
             }
 
@@ -132,6 +192,11 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
     protected void processAuthenticationResponse(HttpServletRequest request,
                                                  HttpServletResponse response, AuthenticationContext context)
             throws AuthenticationFailedException {
+
+        boolean passwordChanged = passwordChangeHandled(request, response, context);
+        if (passwordChanged) {
+            throw new AuthenticationFailedException("Password changed");
+        }
 
         boolean credentialsValid = isUserCredentialsValid(request, response, context);
         if (!credentialsValid) {
@@ -175,10 +240,16 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
     public boolean canHandle(HttpServletRequest httpServletRequest) {
         String userName = httpServletRequest.getParameter(MBSSAuthenticatorConstants.USER_NAME);
         String password = httpServletRequest.getParameter(MBSSAuthenticatorConstants.PASSWORD);
+        Map<String, String[]> map = httpServletRequest.getParameterMap();
+        boolean canHandle = false;
         if (userName != null && password != null) {
-            return true;
+            canHandle = true;
+        } else if (httpServletRequest.getParameter(MBSSAuthenticatorConstants.CURRENT_PASSWORD) != null
+                && httpServletRequest.getParameter(MBSSAuthenticatorConstants.NEW_PASSWORD) != null
+                && httpServletRequest.getParameter(MBSSAuthenticatorConstants.NEW_PASSWORD_CONFIRM) != null) {
+            canHandle = true;
         }
-        return false;
+        return canHandle;
     }
 
     @Override
@@ -399,7 +470,7 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
             return false;
         }
 
-        int expireInterval = ConfigLoader.getInstance().getMbssAuthenticatorConfig().getPasswordChangeConfig()
+        long expireInterval = (long)ConfigLoader.getInstance().getMbssAuthenticatorConfig().getPasswordChangeConfig()
                 .getPasswordChangeInterval();
         String username = request.getParameter(MBSSAuthenticatorConstants.USER_NAME);
         boolean expired = false;
@@ -433,15 +504,76 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
             if (unchangedDurationInMillis > expireIntervalInMillis) {
                 expired = true;
             }
+        } else if (ConfigLoader.getInstance().getMbssAuthenticatorConfig().getPasswordChangeConfig()
+                .isChangePasswordAtFirstLogin()){
+
+            expired = true;
         }
 
         if (expired) {
             log.warn("Password of user [" + username + "] has been expired. " +
-                    "Request will redirect to password change page.");
+                    "Request will be redirected to password change page.");
             context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON,
                     MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_EXPIRED);
         }
 
         return expired;
+    }
+
+    private boolean passwordChangeHandled(HttpServletRequest request, HttpServletResponse response,
+                                         AuthenticationContext context) {
+
+        String currentPassword = request.getParameter(MBSSAuthenticatorConstants.CURRENT_PASSWORD);
+        String newPassword = request.getParameter(MBSSAuthenticatorConstants.NEW_PASSWORD);
+        String newPasswordConfirm = request.getParameter(MBSSAuthenticatorConstants.NEW_PASSWORD_CONFIRM);
+
+        boolean handled = false;
+        if (currentPassword != null && newPassword != null && newPasswordConfirm != null) {
+            String username = context.getSubject().getUserName();
+
+            handled = true;
+            if (newPassword.equals(newPasswordConfirm)) {
+                try {
+                    int tenantId = MBSSAuthenticatorServiceComponent.getRealmService().getTenantManager().
+                            getTenantId(MultitenantUtils.getTenantDomain(username));
+                    UserStoreManager userStoreManager = (UserStoreManager) MBSSAuthenticatorServiceComponent
+                            .getRealmService().getTenantUserRealm(tenantId).getUserStoreManager();
+
+                    String regularExpression = userStoreManager.getRealmConfiguration()
+                            .getUserStoreProperty("PasswordJavaRegEx");
+
+                    if (!MBSSAuthenticatorUtils.isPasswordValid(regularExpression, newPassword)) {
+                        context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON,
+                                MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_REJECTED);
+                    } else {
+                        boolean authorized = userStoreManager.authenticate(
+                                MultitenantUtils.getTenantAwareUsername(username), currentPassword);
+
+                        if (authorized) {
+                            userStoreManager.updateCredential(MultitenantUtils.getTenantAwareUsername(username),
+                                    newPassword, currentPassword);
+                            log.info("Password changed for user: " + username);
+                            context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON,
+                                    MBSSAuthenticatorConstants.REASON_PASSWORD_CHANGE_SUCCESS);
+
+                        } else {
+                            log.info("Invalid current password for user: " + username);
+                            context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON,
+                                    MBSSAuthenticatorConstants.FAILED_REASON_INVALID_CURRENT_PASSWORD);
+                        }
+                    }
+                } catch (UserStoreException e) {
+                    log.error(e.getMessage(), e);
+                    context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON,
+                            MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_CHANGE_FAILED);
+                }
+            } else {
+                context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON,
+                        MBSSAuthenticatorConstants.FAILED_REASON_PASSWORDS_DO_NOT_MATCH);
+                log.error("New password and password confirmation do not match");
+            }
+        }
+
+        return handled;
     }
 }
