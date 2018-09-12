@@ -52,7 +52,7 @@ public class ConfigLoader {
     private ConfigLoader() {
         try {
             if (this.mbssAuthenticatorConfig == null) {
-                this.mbssAuthenticatorConfig = initMbssAuthrnticatorConfig();
+                this.mbssAuthenticatorConfig = initMbssAuthenticatorConfig();
             }
         } catch (JAXBException e) {
             log.error("Error while initiating custom config files", e);
@@ -75,7 +75,7 @@ public class ConfigLoader {
         loader = new ConfigLoader();
     }
 
-    private MBSSAuthenticatorConfig initMbssAuthrnticatorConfig() throws JAXBException {
+    private MBSSAuthenticatorConfig initMbssAuthenticatorConfig() throws JAXBException {
         String configPath = CarbonUtils.getCarbonConfigDirPath() + File.separator
                 + MBSSAuthenticatorConstants.MBSS_AUTHENTICATOR_CONFIG_FILE_NAME;
 

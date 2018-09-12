@@ -50,6 +50,5 @@
     <periodicPasswordChangeConfig>
         <passwordChangeInterval>1</passwordChangeInterval>   <!--in days-->
         <changePasswordAtFirstLogin>true</changePasswordAtFirstLogin>
-        <passwordHistoryValidationCount>5</passwordHistoryValidationCount>
     </periodicPasswordChangeConfig>
 </mbssAuthenticatorConfig>

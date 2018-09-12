@@ -51,7 +51,7 @@ public class MBSSAuthenticatorConfig {
 
     public static class PeriodicPasswordChangeConfig {
         int passwordChangeInterval;
-        int passwordHistoryValidationCount;
+//        int passwordHistoryValidationCount;
         boolean changePasswordAtFirstLogin;
 
         @XmlElement(name = "passwordChangeInterval")
@@ -63,14 +63,14 @@ public class MBSSAuthenticatorConfig {
             this.passwordChangeInterval = passwordChangeInterval;
         }
 
-        @XmlElement(name = "passwordHistoryValidationCount")
-        public int getPasswordHistoryValidationCount() {
-            return passwordHistoryValidationCount;
-        }
-
-        public void setPasswordHistoryValidationCount(int passwordHistoryValidationCount) {
-            this.passwordHistoryValidationCount = passwordHistoryValidationCount;
-        }
+//        @XmlElement(name = "passwordHistoryValidationCount")
+//        public int getPasswordHistoryValidationCount() {
+//            return passwordHistoryValidationCount;
+//        }
+//
+//        public void setPasswordHistoryValidationCount(int passwordHistoryValidationCount) {
+//            this.passwordHistoryValidationCount = passwordHistoryValidationCount;
+//        }
 
         @XmlElement(name = "changePasswordAtFirstLogin")
         public boolean isChangePasswordAtFirstLogin() {

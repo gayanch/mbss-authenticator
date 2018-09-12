@@ -147,8 +147,8 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
                         return;
 
                     } else if (MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_CHANGE_FAILED.equals(failedReason)) {
-                        String retryParam = "&authFailure=true&authFailureMsg=" + errorMessagesConfig
-                                .getPasswordChangeFailedMessage().replaceAll(" ", "%20");
+                        String retryParam = "&authFailure=true&authFailureMsg=" + context.getProperty(
+                                MBSSAuthenticatorConstants.FAILED_REASON_CAUSE).toString().replaceAll(" ", "%20");
 
                         String encodedUrl = loginPage + "?" + queryParams + "&username=" + fullyQualifiedUsername
                                 + "&authenticators=" + getName() + ":" + "LOCAL" + retryParam;
@@ -566,6 +566,7 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
                     log.error(e.getMessage(), e);
                     context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON,
                             MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_CHANGE_FAILED);
+                    context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON_CAUSE, e.getMessage());
                 }
             } else {
                 context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON,
