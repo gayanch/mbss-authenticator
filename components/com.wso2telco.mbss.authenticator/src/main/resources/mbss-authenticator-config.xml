@@ -27,14 +27,12 @@
         <invalidCredentialsMessage>Login credentials are incorrect. Please check and try again.</invalidCredentialsMessage>
         <accountLockedMessage>User account is locked. Please contact administrator.</accountLockedMessage>
         <loginTimeRestrictedMessage>Login failed due to login time restrictions. Contact administrator for more details.</loginTimeRestrictedMessage>
-                
         <passwordChangeSuccessMessage>Password changed successfully</passwordChangeSuccessMessage>
         <passwordChangeFailedMessage>Password change failed. Please try again!</passwordChangeFailedMessage>
         <passwordExpiredMessage>Password expired. Please renew.</passwordExpiredMessage>
         <passwordsDoNotMatchMessage>New password confirmation failed. Check and try again!</passwordsDoNotMatchMessage>
         <passwordRejectedByRegExPolicyMessage>New password doesn't meet the policy requirement. Try a password with Capital letters, numbers and symbols.</passwordRejectedByRegExPolicyMessage>
-        <currentPasswordInvalidMessage>Password change failed. Current Password is invalid.</currentPasswordInvalidMessage>     
-           
+        <currentPasswordInvalidMessage>Password change failed. Current Password is invalid.</currentPasswordInvalidMessage>
         <unknownErrorMessage>Unknown error occurred.</unknownErrorMessage>
     </errorMessages>
     
@@ -48,7 +46,7 @@
     </featureConfig>
     
     <periodicPasswordChangeConfig>
-        <passwordChangeInterval>1</passwordChangeInterval>   <!--in days-->
+        <passwordChangeInterval>0</passwordChangeInterval>   <!--in days-->
         <changePasswordAtFirstLogin>true</changePasswordAtFirstLogin>
     </periodicPasswordChangeConfig>
 </mbssAuthenticatorConfig>
