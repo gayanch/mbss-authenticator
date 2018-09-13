@@ -41,9 +41,9 @@
     <!--Enabled/Disabled statuses of individual features-->
     <featureConfig>
         <accountSuspensionFeature>true</accountSuspensionFeature>        
-        <loginTimeRestrictionFeatrue>true</loginTimeRestrictionFeatrue>
-        <periodicPasswordChangeFeature>true</periodicPasswordChangeFeature>
-        <sessionLimitingFeatrue>true</sessionLimitingFeatrue>
+        <loginTimeRestrictionFeature>true</loginTimeRestrictionFeature>
+        <periodicPasswordChangeFeature>false</periodicPasswordChangeFeature>
+        <sessionLimitingFeature>true</sessionLimitingFeature>
         <maximumSessionLimit>1</maximumSessionLimit>
     </featureConfig>
     

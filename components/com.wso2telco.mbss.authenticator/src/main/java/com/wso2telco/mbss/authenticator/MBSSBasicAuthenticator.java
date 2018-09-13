@@ -263,6 +263,13 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
     }
 
 
+    /**
+     * Checks for validity of user provided credentials
+     * @param request Authentication HttpServletRequest
+     * @param response Authentication HttpServletResponse
+     * @param context Authentication context
+     * @return true if credentials are correct, false otherwise
+     */
     private boolean isUserCredentialsValid(HttpServletRequest request, HttpServletResponse response,
                                            AuthenticationContext context) {
         String username = request.getParameter(MBSSAuthenticatorConstants.USER_NAME);
@@ -295,7 +302,13 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
         return isAuthenticated;
     }
 
-
+    /**
+     * Checks whether the user account is suspended due to inactivity (or any other reason),
+     * @param request Authentication HttpServletRequest
+     * @param response Authentication HttpServletResponse
+     * @param context Authentication Context
+     * @return true if account is suspended, false otherwise or when feature is disabled by configuration.
+     */
     private boolean isAccountSuspended(HttpServletRequest request, HttpServletResponse response,
                                        AuthenticationContext context) {
 
@@ -339,6 +352,13 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
     }
 
 
+    /**
+     * Checks for other active sessions of the same user
+     * @param request Authentication HttpServletRequest
+     * @param response Authentication HttpServletResponse
+     * @param context Authentication Context
+     * @return true if number of active sessions are less than the number defined in configuration file or when feature is disabled by configuration, false otherwise
+     */
     private boolean isNewSessionAllowed(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationContext context) {
 
@@ -371,6 +391,13 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
         return allowed;
     }
 
+    /**
+     * Checks whether login is restricted by work time configuration.
+     * @param request Authentication HttpServletRequest
+     * @param response Authentication HttpServletResponse
+     * @param context Authentication Context
+     * @return true if login is restricted by work time configuration, false otherwise or when feature is disabled by configuration.
+     */
     private boolean isLoginTimeRestricted(HttpServletRequest request, HttpServletResponse response,
                                           AuthenticationContext context) {
 
@@ -411,6 +438,13 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
         return timeRestricted;
     }
 
+    /**
+     * Checks user roles for associated login time restrictions
+     * @param config MBSSAuthenticatorConfig.WorkingTime represents a work time configuration for a role
+     * @param username username
+     * @param userStoreManager UserStoreManager
+     * @return AuthorizeRoleResponse
+     */
     private AuthorizeRoleResponse authorizeLoginForRole(MBSSAuthenticatorConfig.WorkingTime config, String username,
                                                         UserStoreManager userStoreManager) {
 
@@ -437,6 +471,11 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
                 username, config.getRole());
     }
 
+    /**
+     * Compares the current server time with work time configuration
+     * @param config MBSSAuthenticatorConfig.WorkingTime represents a work time configuration for a role
+     * @return true if time of login is within specified time period in configuration, false otherwise.
+     */
     private boolean isLoginAllowedByTimeConfig(MBSSAuthenticatorConfig.WorkingTime config) {
         try {
             Date start = new SimpleDateFormat("HHmm").parse(config.getStartTime());
@@ -462,6 +501,13 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
         }
     }
 
+    /**
+     * Checks whether user password is expired according to the password validity period defined in configuration.
+     * @param request Authentication HttpServletRequest
+     * @param response Authentication HttpServletResponse
+     * @param context Authentication Context
+     * @return true if password is expired, false otherwise of when feature is disabled by configuration.
+     */
     private boolean isPasswordExpired(HttpServletRequest request, HttpServletResponse response,
                                       AuthenticationContext context) {
         boolean featureEnabled = ConfigLoader.getInstance().getMbssAuthenticatorConfig().getFeatureConfig()
@@ -520,6 +566,13 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
         return expired;
     }
 
+    /**
+     * Handles password change requests and updates user credentials if all the requirements are correct.
+     * @param request Authentication HttpServletRequest
+     * @param response Authentication HttpServletResponse
+     * @param context Authentication Context
+     * @return true if password change handled or failed to update credentials, false if request was not a password change request.
+     */
     private boolean passwordChangeHandled(HttpServletRequest request, HttpServletResponse response,
                                          AuthenticationContext context) {
 
@@ -546,6 +599,7 @@ public class MBSSBasicAuthenticator extends AbstractApplicationAuthenticator imp
                         context.setProperty(MBSSAuthenticatorConstants.FAILED_REASON,
                                 MBSSAuthenticatorConstants.FAILED_REASON_PASSWORD_REJECTED);
                     } else {
+
                         boolean authorized = userStoreManager.authenticate(
                                 MultitenantUtils.getTenantAwareUsername(username), currentPassword);
 

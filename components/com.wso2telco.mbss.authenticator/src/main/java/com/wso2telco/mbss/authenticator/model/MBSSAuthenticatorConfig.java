@@ -63,15 +63,6 @@ public class MBSSAuthenticatorConfig {
             this.passwordChangeInterval = passwordChangeInterval;
         }
 
-//        @XmlElement(name = "passwordHistoryValidationCount")
-//        public int getPasswordHistoryValidationCount() {
-//            return passwordHistoryValidationCount;
-//        }
-//
-//        public void setPasswordHistoryValidationCount(int passwordHistoryValidationCount) {
-//            this.passwordHistoryValidationCount = passwordHistoryValidationCount;
-//        }
-
         @XmlElement(name = "changePasswordAtFirstLogin")
         public boolean isChangePasswordAtFirstLogin() {
             return changePasswordAtFirstLogin;
@@ -98,7 +89,7 @@ public class MBSSAuthenticatorConfig {
             this.accountSuspensionEnabled = accountSuspensionEnabled;
         }
 
-        @XmlElement(name = "sessionLimitingFeatrue")
+        @XmlElement(name = "sessionLimitingFeature")
         public boolean isSessionLimitingEnabled() {
             return sessionLimitingEnabled;
         }
@@ -107,7 +98,7 @@ public class MBSSAuthenticatorConfig {
             this.sessionLimitingEnabled = sessionLimitingEnabled;
         }
 
-        @XmlElement(name = "loginTimeRestrictionFeatrue")
+        @XmlElement(name = "loginTimeRestrictionFeature")
         public boolean isLoginTimeRestrictionEnabled() {
             return loginTimeRestrictionEnabled;
         }
